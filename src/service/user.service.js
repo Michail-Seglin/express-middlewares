@@ -1,71 +1,79 @@
-const arr = [{
-    "id": 1, "name": "Hanna", "surname": "Pleshko", "email": "hannapleshko@gmail.com", "pwd":
-        "12345678"
-},
-{ "id": 2, "name": "Есения", "surname": "Грант", "email": "yesgrant@mail.ru", "pwd": "12345678" },
-{
-    "id": 3, "name": "Анастасия", "surname": "Павлова", "email": "pavlova@gmail.com", "pwd":
-        "12345678"
-},
-{ "id": 4, "name": "Мария", "surname": "Гардон", "email": "gardon@mail.ru", "pwd": "12345678" },
-{
-    "id": 5, "name": "Марта", "surname": "Котикова", "email": "martaktik@gmail.com", "pwd": "12345678"
-},
-{ "id": 6, "name": "Борис", "surname": "Юревич", "email": "testdata@gmail.com", "pwd": "12345678" },
-{ "id": 7, "name": "Рыжик", "surname": "Рыжий", "email": "email@gmail.com", "pwd": "12345678" },
-{ "id": 8, "name": "Рейна", "surname": "Собачкова", "email": "dogdoggav@mail.ru", "pwd": "12345678" },
-{ "id": 9, "name": "Максим", "surname": "Николаев", "email": "hanna@gmail.com", "pwd": "12345678" },
-{
-    "id": 10, "name": "Константин", "surname": "Константинов", "email": "konst@mail.ru", "pwd":
-        "12345678"
-},
-{ "id": 11, "name": "Иван", "surname": "Иванов", "email": "ivaniv@gmail.com", "pwd": "12345678" },
-{ "id": 12, "name": "Николай", "surname": "Николаев", "email": "nikkkk@mail.ru", "pwd": "12345678" }
-];
+const fs = require("fs");
+const path = './storage/storage.json';
 
 function getAllUser() {
-    if (!arr.length) throw new Error('Empty')
-    return arr
+    const data = JSON.parse(fs.readFileSync(path));
+    if (!data.length) throw new Error('emty')
+    return data;
 }
 
 function getUserById(id) {
-    const filtered = arr.filter(el => el.id == id)
-    if (!filtered.length) throw new Error('id is not found')
-    return filtered[0]
-}
-
-function createUser(name, surname, email, pwd) {
-    const filtered = arr.filter(el => el.email == email);
-    if (filtered.length > 0) throw new Error('Alredy  exist');
-    const item = {
-        id: arr.length + 1,
-        name: name,
-        surname: surname,
-        email: email,
-        pwd: pwd
-    }
-    arr.push(item);
-    return arr
+    const data = JSON.parse(fs.readFileSync(path));
+    const filtered = data.filter((el) => el.id == id);
+    if (!data.length) throw new Error('id not found')
+    return filtered
 }
 
 function updateUser(id, name, surname, email, pwd) {
-    const item = {
+    const data = JSON.parse(fs.readFileSync(path));
+    const filtered = data.filter((el) => el.id != id);
+
+    const newObj = {
         id: +id,
         name: name,
         surname: surname,
         email: email,
         pwd: pwd
     }
-    const filtered = arr.filter(el => el.id == id);
-    if (filtered.length == arr.length) throw new Error('id not found');
 
-    filtered.push(item);
+    if (filtered.length === data.length) throw new Error('id not found')
+    filtered.push(newObj);
+    fs.writeFileSync(path, JSON.stringify(filtered));
     return filtered
 }
 
+function createUser(name, surname, email, pwd) {
+    const data = JSON.parse(fs.readFileSync(path));
+    const item = {
+        id: data.length + 1,
+        name: name,
+        surname: surname,
+        email: email,
+        pwd: pwd
+    }
+    data.push(item);
+    return data
+}
+
+function patchUser(id, clientObj) {
+    const data = JSON.parse(fs.readFileSync(path));
+
+    const oldData = data.find((el) => el.id == id);
+    const newData = { ...oldData, ...clientObj };
+
+    const patched = data.filter((el) => el.id != id);
+    if (patched.length == data.length) throw new Error('id not found');
+
+    patched.push(newData);
+
+    fs.writeFileSync(path, JSON.stringify(patched));
+    return patched
+}
+
+function deleteUser(id) {
+    const data = JSON.parse(fs.readFileSync(path));
+    const filtered = data.filter((el) => el.id != id);
+
+    if (filtered.length == data.length) throw new Error('id not found')
+
+    fs.writeFileSync(path, JSON.stringify(filtered));
+    return filtered
+}
 module.exports = {
     getAllUser,
+    deleteUser,
     getUserById,
+    updateUser,
     createUser,
-    updateUser
-}
+    patchUser
+};
